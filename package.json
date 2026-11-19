@@ -1,0 +1,35 @@
+{
+  "name": "prestamos-web-vercel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema de gestión de préstamos con autenticación segura (Next.js + PostgreSQL + Cloudinary)",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:init": "node scripts/init-db.js"
+  },
+  "dependencies": {
+    "next": "16.1.3",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "pg": "^8.13.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "cloudinary": "^2.5.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/pg": "^8.11.10",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.7",
+    "typescript": "^5",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.3",
+    "tailwindcss": "^4",
+    "@tailwindcss/postcss": "^4"
+  }
+}
