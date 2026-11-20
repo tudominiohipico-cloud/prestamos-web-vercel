@@ -13,9 +13,6 @@ export async function GET() {
         username TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
         role TEXT NOT NULL DEFAULT 'collector',
-        email TEXT,
-        reset_token TEXT,
-        reset_expires TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
@@ -23,8 +20,6 @@ export async function GET() {
       CREATE TABLE IF NOT EXISTS clients (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
-        email TEXT,
-        phone TEXT,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
@@ -105,6 +100,14 @@ export async function GET() {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
+
+    // 1b. Agregar columnas nuevas a tablas existentes (si no existen)
+    // Esto es para los que ya crearon la BD con la versión vieja del código
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token TEXT`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_expires TIMESTAMPTZ`);
+    await query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS email TEXT`);
+    await query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS phone TEXT`);
 
     // 2. Crear índices
     await query("CREATE INDEX IF NOT EXISTS idx_loans_client ON loans(client_id)");
