@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
     req,
     activeKey: "clients",
     title: "Clientes",
-    subtitle: "Crear y listar clientes",
+    subtitle: "Crear y listar clientes (en tiempo real)",
     content: `
       <div class="panel">
         <div class="panel-header"><h2>Todos los clientes</h2>
@@ -14,8 +14,8 @@ export async function GET(req: NextRequest) {
         </div>
         <div class="panel-body no-pad">
           <table>
-            <thead><tr><th>ID</th><th>Nombre</th><th>Creado</th><th>Acciones</th></tr></thead>
-            <tbody id="clientsBody"><tr><td colspan="4" class="empty-state">Cargando...</td></tr></tbody>
+            <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Creado</th><th>Acciones</th></tr></thead>
+            <tbody id="clientsBody"><tr><td colspan="6" class="empty-state">Cargando...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -28,8 +28,16 @@ export async function GET(req: NextRequest) {
           <div class="modal-body">
             <form id="clientForm">
               <div class="field">
-                <label for="name">Nombre completo</label>
+                <label for="name">Nombre completo *</label>
                 <input type="text" id="name" required placeholder="Ej: María González">
+              </div>
+              <div class="field">
+                <label for="email">Correo electrónico</label>
+                <input type="email" id="email" placeholder="cliente@correo.com">
+              </div>
+              <div class="field">
+                <label for="phone">Teléfono</label>
+                <input type="text" id="phone" placeholder="+58 412-555.1234">
               </div>
               <div class="form-actions">
                 <button type="button" class="btn btn-sm" style="background:#f1ede4" onclick="closeModal()">Cancelar</button>
@@ -43,33 +51,39 @@ export async function GET(req: NextRequest) {
     script: `
       async function loadClients() {
         const body = document.getElementById('clientsBody');
-        body.innerHTML = '<tr><td colspan="4" class="empty-state">Cargando...</td></tr>';
+        body.innerHTML = '<tr><td colspan="6" class="empty-state">Cargando...</td></tr>';
         try {
           const rows = await api('/api/clients');
           if (!Array.isArray(rows) || rows.length === 0) {
-            body.innerHTML = '<tr><td colspan="4" class="empty-state">No hay clientes. Crea el primero.</td></tr>';
+            body.innerHTML = '<tr><td colspan="6" class="empty-state">No hay clientes. Crea el primero.</td></tr>';
             return;
           }
-          body.innerHTML = rows.map(c => '<tr><td>' + c.id + '</td><td>' + esc(c.name) + '</td><td>' + esc((c.created_at||'').slice(0,10)) + '</td><td><a class="btn btn-sm btn-gold" href="/loans?client_id=' + c.id + '">Ver préstamos</a></td></tr>').join('');
+          body.innerHTML = rows.map(c => '<tr><td>' + c.id + '</td><td>' + esc(c.name) + '</td><td>' + esc(c.email||'-') + '</td><td>' + esc(c.phone||'-') + '</td><td>' + esc((c.created_at||'').slice(0,10)) + '</td><td><a class="btn btn-sm btn-gold" href="/loans?client_id=' + c.id + '">Ver préstamos</a></td></tr>').join('');
         } catch (e) {
-          body.innerHTML = '<tr><td colspan="4" class="empty-state">Error: ' + esc(e.message) + '</td></tr>';
+          body.innerHTML = '<tr><td colspan="6" class="empty-state">Error: ' + esc(e.message) + '</td></tr>';
         }
       }
       function openModal() {
         document.getElementById('modal').classList.add('show');
         document.getElementById('name').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('phone').value = '';
         document.getElementById('name').focus();
       }
       function closeModal() { document.getElementById('modal').classList.remove('show'); }
       document.getElementById('clientForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const name = document.getElementById('name').value.trim();
-        if (!name) return;
+        const data = {
+          name: document.getElementById('name').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+        };
+        if (!data.name) { showAlert('Ingresa el nombre'); return; }
         try {
-          await api('/api/clients', 'POST', { name });
+          await api('/api/clients', 'POST', data);
           closeModal();
           showAlert('Cliente creado correctamente', 'success');
-          loadClients();
+          loadClients();  // recarga en tiempo real
         } catch (err) { showAlert(err.message); }
       });
       loadClients();

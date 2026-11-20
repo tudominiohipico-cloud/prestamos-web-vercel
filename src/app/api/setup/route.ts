@@ -13,6 +13,9 @@ export async function GET() {
         username TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
         role TEXT NOT NULL DEFAULT 'collector',
+        email TEXT,
+        reset_token TEXT,
+        reset_expires TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
@@ -20,6 +23,8 @@ export async function GET() {
       CREATE TABLE IF NOT EXISTS clients (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
+        email TEXT,
+        phone TEXT,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
@@ -113,8 +118,14 @@ export async function GET() {
     if (checkBolivar.rows.length === 0) {
       const hash = await hashPassword("liam1414");
       await query(
-        "INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) ON CONFLICT (username) DO NOTHING",
-        ["bolivar", hash, "owner"]
+        "INSERT INTO users (username, password_hash, role, email) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO NOTHING",
+        ["bolivar", hash, "owner", "tudominio.hipico@gmail.com"]
+      );
+    } else {
+      // Si ya existe pero sin email, lo actualizamos
+      await query(
+        "UPDATE users SET email = $1 WHERE LOWER(username) = 'bolivar' AND (email IS NULL OR email = '')",
+        ["tudominio.hipico@gmail.com"]
       );
     }
 

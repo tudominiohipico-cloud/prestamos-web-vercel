@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, type AuthUser } from "./auth";
+import fs from "fs";
+import path from "path";
 
 const ITEMS = [
   ["dashboard", "📊", "Dashboard"],
@@ -28,6 +30,15 @@ function esc(s: string): string {
     };
     return map[ch] || ch;
   });
+}
+
+function loadCss(): string {
+  try {
+    const cssPath = path.join(process.cwd(), "src", "app", "globals.css");
+    return fs.readFileSync(cssPath, "utf8");
+  } catch {
+    return "";
+  }
 }
 
 export function renderPage(opts: {
@@ -77,7 +88,7 @@ export function renderPage(opts: {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${esc(opts.title)} | Préstamos Web</title>
-  <link rel="stylesheet" href="/_styles.css">
+  <style>${loadCss()}</style>
 </head>
 <body>
   <div class="layout">
