@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
-import { verifyPassword, signToken, checkRateLimit, getIp, ensureDefaultUsers } from "@/lib/auth";
+import { verifyPassword, signToken, checkRateLimit, getIp, ensureDefaultUsers, setAuthCookie } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 
 export async function POST(req: NextRequest) {
@@ -59,6 +59,9 @@ export async function POST(req: NextRequest) {
       user: { id: user.id, username: user.username, role: user.role },
       token,
     });
+    // Establecer cookie de autenticación (para que el navegador la envíe automáticamente
+    // cuando navega a /dashboard, /clients, etc.)
+    setAuthCookie(res2, token);
     return res2;
   } catch (e: any) {
     console.error("[login] error:", e);

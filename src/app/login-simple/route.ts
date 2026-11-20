@@ -104,8 +104,10 @@ export async function GET() {
           try {
             var data = JSON.parse(xhr.responseText);
             if (xhr.status === 200) {
+              // Guardar el token en localStorage (la cookie httpOnly se setea automáticamente
+              // en la respuesta del server, pero la usamos también como flag para el frontend)
               localStorage.setItem('pw_auth', JSON.stringify(data));
-              d('OK, redirigiendo...');
+              d('OK, redirigiendo al dashboard...');
               window.location.href = '/dashboard';
             } else {
               showAlert(data.error || 'Error en login', 'error');

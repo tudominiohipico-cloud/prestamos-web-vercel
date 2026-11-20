@@ -75,9 +75,7 @@ export function renderPage(opts: {
         }).join("")}
       </ul>
       <div class="sidebar-footer">
-        <form action="/api/logout" method="POST" style="margin:0;">
-          <button type="submit" style="width:100%;padding:9px;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(201,161,74,0.3);border-radius:6px;cursor:pointer;font-size:13px;font-family:inherit;">Cerrar sesión</button>
-        </form>
+        <button type="button" onclick="window.doLogout()" style="width:100%;padding:9px;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(201,161,74,0.3);border-radius:6px;cursor:pointer;font-size:13px;font-family:inherit;">Cerrar sesión</button>
       </div>
     </aside>
   `;
@@ -105,20 +103,40 @@ export function renderPage(opts: {
     </main>
   </div>
   <script>
-    function getToken(){ try { const a = JSON.parse(localStorage.getItem('pw_auth')); return a ? a.token : null; } catch { return null; } }
+    function getToken(){
+      // La cookie httpOnly no es accesible desde JS, pero el navegador la envía
+      // automáticamente en fetch. Solo necesitamos saber si existe el flag de login.
+      try { const a = JSON.parse(localStorage.getItem('pw_auth')); return a ? a.token : null; }
+      catch { return null; }
+    }
     async function api(path, method='GET', body=null, isForm=false){
       const token = getToken();
-      if (!token) { window.location.href = '/'; return; }
-      const opts = { method, headers: { 'Authorization': 'Bearer ' + token } };
+      // Si no hay token, dejar que la cookie httpOnly maneje la auth
+      const opts = { method, headers: {} };
+      if (token) opts.headers['Authorization'] = 'Bearer ' + token;
       if (body) {
         if (isForm) { opts.body = body; }
         else { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
       }
-      const res = await fetch(path, opts);
-      if (res.status === 401) { window.location.href = '/'; return; }
-      const data = await res.json().catch(()=>({}));
-      if (!res.ok) throw new Error(data.error || 'Error');
-      return data;
+      try {
+        const res = await fetch(path, opts);
+        if (res.status === 401) { window.location.href = '/'; return; }
+        const data = await res.json().catch(()=>({}));
+        if (!res.ok) throw new Error(data.error || 'Error');
+        return data;
+      } catch (e) {
+        if (e.message === 'Failed to fetch') {
+          alert('Error de conexión. Revisa tu internet.');
+        }
+        throw e;
+      }
+    }
+    async function doLogout() {
+      try {
+        await fetch('/api/logout', { method: 'POST' });
+      } catch {}
+      localStorage.removeItem('pw_auth');
+      window.location.href = '/';
     }
     function fmtBs(v){ if (v==null||isNaN(v)) return '-'; return 'Bs. ' + Number(v).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2}); }
     function esc(s){ return String(s||'').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]); }

@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { query } from "./db";
-import type { NextRequest } from "next/server";
+import type { NextRequest, NextResponse } from "next/server";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-fallback-secret-change-in-prod";
 const JWT_EXPIRES_IN = "8h";
@@ -38,12 +38,39 @@ export function verifyToken(token: string): AuthUser | null {
   }
 }
 
-// ===== Extraer usuario del request (header Authorization) =====
+// ===== Extraer usuario del request (cookie Authorization o header) =====
+// El navegador envía cookies automáticamente al navegar. Las cookies
+// son la forma estándar de mantener sesión en SSR (Server-Side Rendering).
 export function getUserFromRequest(req: NextRequest): AuthUser | null {
+  // 1. Intentar leer el token de la cookie "pw_auth"
+  const cookieToken = req.cookies.get("pw_auth")?.value;
+  if (cookieToken) {
+    const user = verifyToken(cookieToken);
+    if (user) return user;
+  }
+  // 2. Si no hay cookie, intentar leer del header Authorization (para API calls)
   const auth = req.headers.get("authorization");
   if (!auth || !auth.startsWith("Bearer ")) return null;
   const token = auth.slice(7);
   return verifyToken(token);
+}
+
+// ===== Establecer cookie de autenticación en la respuesta =====
+export function setAuthCookie(res: NextResponse, token: string): NextResponse {
+  res.cookies.set("pw_auth", token, {
+    httpOnly: true,        // JavaScript no puede leer la cookie (seguridad)
+    secure: process.env.NODE_ENV === "production", // Solo HTTPS en producción
+    sameSite: "lax",       // Protección contra CSRF
+    maxAge: 8 * 60 * 60,   // 8 horas (igual que el JWT)
+    path: "/",
+  });
+  return res;
+}
+
+// ===== Borrar cookie de autenticación =====
+export function clearAuthCookie(res: NextResponse): NextResponse {
+  res.cookies.delete("pw_auth");
+  return res;
 }
 
 // ===== Rate limit simple en memoria (por IP) =====
