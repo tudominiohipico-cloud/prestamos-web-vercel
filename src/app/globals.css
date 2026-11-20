@@ -1,4 +1,4 @@
-@import "tailwindcss";
+/* CSS del panel de Préstamos Web (sin Tailwind para evitar errores en Vercel) */
 
 :root {
   --navy: #0b2545;
