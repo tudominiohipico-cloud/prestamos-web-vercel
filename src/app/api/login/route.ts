@@ -37,6 +37,13 @@ export async function POST(req: NextRequest) {
       [username]
     );
     if (res.rows.length === 0) {
+      // Si no hay usuarios en la BD, sugerir hacer setup
+      const count = await query("SELECT COUNT(*)::int as n FROM users");
+      if (count.rows[0].n === 0) {
+        return NextResponse.json({
+          error: "La base de datos está vacía. Visita /api/setup primero para inicializarla.",
+        }, { status: 500 });
+      }
       await logAudit({ userId: null, action: "login_failed", entity: "user", ip, details: { username } });
       return NextResponse.json({ error: "Usuario o contraseña incorrectos" }, { status: 401 });
     }

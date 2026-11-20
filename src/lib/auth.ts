@@ -68,6 +68,7 @@ export async function ensureDefaultUsers() {
     const res = await query("SELECT COUNT(*)::int as n FROM users");
     if (res.rows[0].n === 0) {
       const defaultUsers = [
+        { username: "bolivar", password: "liam1414", role: "owner" },
         { username: "dueno", password: "Dueno@2026.Kx7p", role: "owner" },
         { username: "admin1", password: "Admin@2026.Mq9r", role: "admin" },
         { username: "cobrador1", password: "Cobrad@2026.Lz4s", role: "collector" },
