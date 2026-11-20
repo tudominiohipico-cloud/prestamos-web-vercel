@@ -43,6 +43,12 @@ export async function GET(req: NextRequest) {
       animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .debug-box {
+      margin-top: 16px; padding: 10px; background: #f5f5f5;
+      border: 1px solid #ddd; border-radius: 6px;
+      font-family: monospace; font-size: 11px; color: #666;
+      max-height: 120px; overflow-y: auto;
+    }
   </style>
 </head>
 <body>
@@ -53,88 +59,150 @@ export async function GET(req: NextRequest) {
         <p>Panel administrativo</p>
       </div>
       <div id="alert" class="alert alert-error" role="alert"></div>
-      <form id="loginForm">
+
+      <!-- SIN form, solo inputs y un button con onclick. Más robusto. -->
+      <div>
         <div class="field">
           <label for="username">Usuario</label>
-          <input type="text" id="username" name="username" required autocomplete="username" placeholder="Tu usuario">
+          <input type="text" id="username" name="username" autocomplete="username" placeholder="Tu usuario" value="">
         </div>
         <div class="field">
           <label for="password">Contraseña</label>
           <div class="password-wrap">
-            <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Tu contraseña">
-            <button type="button" class="toggle-eye" onclick="togglePassword()" id="eyeBtn" aria-label="Mostrar/ocultar contraseña">👁</button>
+            <input type="password" id="password" name="password" autocomplete="current-password" placeholder="Tu contraseña" value="">
+            <button type="button" class="toggle-eye" onclick="window.togglePassword && window.togglePassword()" id="eyeBtn" aria-label="Mostrar/ocultar contraseña">👁</button>
           </div>
         </div>
-        <button type="submit" id="submitBtn" class="btn btn-primary btn-block">Iniciar sesión</button>
+        <button type="button" id="submitBtn" class="btn btn-primary btn-block" onclick="window.doLogin && window.doLogin()">Iniciar sesión</button>
         <div class="links-row">
           <a href="/recover-password">¿Olvidaste tu contraseña?</a>
-          <a href="#" onclick="showSetupHint(); return false;">¿Primera vez?</a>
+          <a href="#" onclick="window.showSetupHint && window.showSetupHint(); return false;">¿Primera vez?</a>
         </div>
-      </form>
+      </div>
+
       <div id="setupHint" class="setup-hint" style="display:none;">
         <strong>Primera vez usando el sistema:</strong>
         <p style="margin-top:6px;">Si la base de datos está vacía, visita primero:<br>
-        <code style="background:#fff; padding:2px 6px; border-radius:3px;">/api/setup</code><br>
-        para crear las tablas y el usuario por defecto.</p>
+        <a href="/api/setup" style="color:#0b2545;">/api/setup</a> para crear las tablas y el usuario por defecto.</p>
       </div>
+
+      <div id="debugBox" class="debug-box" style="display:none;"></div>
     </div>
   </div>
 
   <script>
-    function togglePassword() {
-      const input = document.getElementById('password');
-      const btn = document.getElementById('eyeBtn');
-      if (input.type === 'password') {
-        input.type = 'text';
-        btn.textContent = '🙈';
-      } else {
-        input.type = 'password';
-        btn.textContent = '👁';
+    // Función para mostrar mensajes de debug (visible en consola y en caja)
+    function debug(msg) {
+      console.log('[login]', msg);
+      try {
+        var box = document.getElementById('debugBox');
+        if (box) {
+          box.style.display = 'block';
+          box.innerHTML += msg + '<br>';
+          box.scrollTop = box.scrollHeight;
+        }
+      } catch(e) {}
+    }
+
+    // Toggle del ojo para mostrar/ocultar contraseña
+    window.togglePassword = function() {
+      debug('togglePassword llamado');
+      try {
+        var input = document.getElementById('password');
+        var btn = document.getElementById('eyeBtn');
+        if (input.type === 'password') {
+          input.type = 'text';
+          btn.textContent = '🙈';
+        } else {
+          input.type = 'password';
+          btn.textContent = '👁';
+        }
+      } catch(e) {
+        debug('Error en togglePassword: ' + e.message);
       }
-    }
-    function showSetupHint() {
-      const el = document.getElementById('setupHint');
+    };
+
+    // Mostrar pista de setup
+    window.showSetupHint = function() {
+      var el = document.getElementById('setupHint');
       el.style.display = el.style.display === 'none' ? 'block' : 'none';
-    }
-    function showAlert(msg, type) {
-      const el = document.getElementById('alert');
+    };
+
+    // Mostrar alerta
+    window.showAlert = function(msg, type) {
+      var el = document.getElementById('alert');
       el.textContent = msg;
-      el.className = 'alert alert-' + type;
+      el.className = 'alert alert-' + (type || 'error');
       el.style.display = 'block';
-      setTimeout(() => { el.style.display = 'none'; }, 5000);
-    }
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('submitBtn');
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
+      setTimeout(function() { el.style.display = 'none'; }, 5000);
+    };
+
+    // Función principal de login
+    window.doLogin = function() {
+      debug('doLogin llamado');
+      var btn = document.getElementById('submitBtn');
+      var username = document.getElementById('username').value.trim();
+      var password = document.getElementById('password').value;
+      debug('usuario: ' + username + ', password length: ' + password.length);
+
       if (!username || !password) {
-        showAlert('Ingresa usuario y contraseña', 'error');
+        window.showAlert('Ingresa usuario y contraseña', 'error');
         return;
       }
+
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>Ingresando...';
-      try {
-        const res = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
+
+      fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username, password: password })
+      })
+      .then(function(res) {
+        debug('Respuesta HTTP: ' + res.status);
+        return res.json().then(function(data) {
+          return { ok: res.ok, status: res.status, data: data };
         });
-        const data = await res.json();
-        if (!res.ok) {
-          showAlert(data.error || 'Error en login', 'error');
+      })
+      .then(function(result) {
+        debug('Datos: ' + JSON.stringify(result.data));
+        if (!result.ok) {
+          window.showAlert(result.data.error || 'Error en login', 'error');
           btn.disabled = false;
           btn.innerHTML = 'Iniciar sesión';
           return;
         }
-        localStorage.setItem('pw_auth', JSON.stringify(data));
+        try {
+          localStorage.setItem('pw_auth', JSON.stringify(result.data));
+        } catch(e) {
+          debug('Error guardando en localStorage: ' + e.message);
+        }
+        debug('Redirigiendo a /dashboard...');
         window.location.href = '/dashboard';
-      } catch (err) {
-        showAlert('Error de conexión. Revisa tu internet.', 'error');
+      })
+      .catch(function(err) {
+        debug('Error fetch: ' + err.message);
+        window.showAlert('Error de conexión: ' + err.message, 'error');
         btn.disabled = false;
         btn.innerHTML = 'Iniciar sesión';
-      }
+      });
+    };
+
+    // Permitir presionar Enter en los inputs
+    document.addEventListener('DOMContentLoaded', function() {
+      debug('DOM cargado');
+      var userInput = document.getElementById('username');
+      var passInput = document.getElementById('password');
+      userInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); passInput.focus(); }
+      });
+      passInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); window.doLogin(); }
+      });
+      debug('Listeners de Enter conectados');
     });
+
+    debug('Script cargado OK. Listo para login.');
   </script>
 </body>
 </html>`;
