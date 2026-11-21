@@ -104,11 +104,14 @@ export async function GET() {
           try {
             var data = JSON.parse(xhr.responseText);
             if (xhr.status === 200) {
-              // Guardar el token en localStorage (la cookie httpOnly se setea automáticamente
-              // en la respuesta del server, pero la usamos también como flag para el frontend)
+              // Guardar info del usuario en localStorage
               localStorage.setItem('pw_auth', JSON.stringify(data));
-              d('OK, redirigiendo al dashboard...');
-              window.location.href = '/dashboard';
+              // El backend devuelve la URL a la que ir según el tipo de usuario:
+              // - 'admin'  → /admin/dashboard  (dueño del sistema)
+              // - 'user'   → /dashboard        (dueño de casa, cobrador, cliente)
+              var redirect = data.redirect || '/dashboard';
+              d('Tipo de usuario: ' + data.user_type + ' → redirigiendo a ' + redirect);
+              window.location.href = redirect;
             } else {
               showAlert(data.error || 'Error en login', 'error');
               btn.disabled = false;
