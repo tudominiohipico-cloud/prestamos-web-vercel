@@ -5,9 +5,13 @@ import path from "path";
 
 const ITEMS = [
   ["dashboard", "📊", "Dashboard"],
+  ["gota-gota", "💧", "Gota a Gota"],
   ["clients", "👥", "Clientes"],
   ["loans", "💵", "Préstamos"],
   ["payments", "🧾", "Pagos"],
+  ["motorizados", "🏍", "Motorizados"],
+  ["ruta-diaria", "📍", "Ruta Diaria"],
+  ["capital", "💰", "Capital"],
   ["collaterals", "🔒", "Garantías"],
   ["expenses", "💸", "Gastos"],
   ["users", "👤", "Usuarios"],
@@ -15,9 +19,9 @@ const ITEMS = [
 ];
 
 const ROLE_PERMS: Record<string, string[]> = {
-  owner: ["dashboard", "clients", "loans", "payments", "collaterals", "expenses", "users", "audit"],
-  admin: ["dashboard", "clients", "loans", "payments", "collaterals", "expenses"],
-  collector: ["dashboard", "clients", "loans", "payments"],
+  owner: ["dashboard","gota-gota","clients","loans","payments","motorizados","ruta-diaria","capital","collaterals","expenses","users","audit"],
+  admin: ["dashboard","gota-gota","clients","loans","payments","motorizados","ruta-diaria","capital","collaterals","expenses"],
+  collector: ["dashboard","clients","loans","payments","ruta-diaria"],
 };
 const ROLE_LABEL: Record<string, string> = {
   owner: "Dueño", admin: "Administrador", collector: "Cobrador",
