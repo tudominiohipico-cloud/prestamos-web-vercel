@@ -70,7 +70,7 @@ export async function GET(req: any) {
       // Marcar como no pagó
       await query(
         `INSERT INTO no_pagos (loan_id, motorizado_id, house_id, fecha, motivo, created_by)
-         VALUES ($1, NULL, NULL, $2, 'No pagó (automático medianoche)', NULL)
+         VALUES ($1, NULL, 0, $2, 'No pagó (automático medianoche)', NULL)
          ON CONFLICT (loan_id, fecha) DO NOTHING`,
         [loan.id, fechaAyer]
       );
