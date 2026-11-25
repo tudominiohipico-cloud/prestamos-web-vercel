@@ -48,9 +48,19 @@ export async function GET() {
         fecha TEXT NOT NULL,
         motivo TEXT,
         created_by INTEGER,
-        created_at TIMESTAMPTZ DEFAULT NOW(),
-        UNIQUE(loan_id, fecha)
+        created_at TIMESTAMPTZ DEFAULT NOW()
       );
+    `);
+    // Agregar constraint UNIQUE si no existe (para que ON CONFLICT funcione)
+    await query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'uq_no_pagos_loan_fecha'
+        ) THEN
+          ALTER TABLE no_pagos ADD CONSTRAINT uq_no_pagos_loan_fecha UNIQUE (loan_id, fecha);
+        END IF;
+      END $$;
     `);
 
     // 5. Generar QR tokens para clientes que no tengan
