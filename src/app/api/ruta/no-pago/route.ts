@@ -42,9 +42,10 @@ export async function POST(req: NextRequest) {
     const loan = loanRes.rows[0];
 
     // Insertar registro de no pago (usar ON CONFLICT para evitar duplicados)
+    // house_id puede ser NULL por ahora (no lo trackeamos en esta versión)
     await query(
       `INSERT INTO no_pagos (loan_id, motorizado_id, house_id, fecha, motivo, created_by)
-       VALUES ($1, $2, NULL, $3, $4, $5)
+       VALUES ($1, $2, 0, $3, $4, $5)
        ON CONFLICT (loan_id, fecha) DO UPDATE SET motivo = $4, created_by = $5`,
       [loanId, loan.motorizado_id, fecha, motivo || null, user.id]
     );
@@ -72,6 +73,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (e: any) {
     console.error("[no-pago POST] error:", e);
-    return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
+    return NextResponse.json({ error: "Error del servidor: " + e.message }, { status: 500 });
   }
 }
