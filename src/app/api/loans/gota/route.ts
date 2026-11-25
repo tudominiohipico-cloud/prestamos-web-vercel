@@ -45,6 +45,9 @@ export async function POST(req: NextRequest) {
   const moraPorVisita = Number(body.mora_por_visita || 0);
   const motorizadoId = body.motorizado_id ? Number(body.motorizado_id) : null;
   const cobrarDomingo = !!body.cobrar_domingo;
+  const cobrarMora = body.cobrar_mora !== undefined ? !!body.cobrar_mora : true;
+  const tipoInteresRecargo = ["ninguno","solo_mora","toda_deuda","recalcular_cuota"].includes(body.tipo_interes_recargo)
+    ? body.tipo_interes_recargo : "ninguno";
   const fechaInicio = sanitize(body.fecha_inicio).slice(0, 20);
   const moneda = sanitize(body.currency || "VES").slice(0, 10) || "VES";
 
@@ -79,8 +82,8 @@ export async function POST(req: NextRequest) {
         client_id, contract_number, amount, interest_rate, currency, status,
         tipo, dias_plazo, cuota_diaria, total_a_cobrar, seguro_monto,
         mora_por_visita, motorizado_id, fecha_inicio, fecha_fin,
-        creado_por, cobrar_domingo
-      ) VALUES ($1, $2, $3, $4, $5, 'active', 'gota', $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        creado_por, cobrar_domingo, cobrar_mora, tipo_interes_recargo
+      ) VALUES ($1, $2, $3, $4, $5, 'active', 'gota', $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING id`,
       [
         clientId,
@@ -98,6 +101,8 @@ export async function POST(req: NextRequest) {
         fechaFin,
         user.id,
         cobrarDomingo,
+        cobrarMora,
+        tipoInteresRecargo,
       ]
     );
     const loanId = res.rows[0].id;

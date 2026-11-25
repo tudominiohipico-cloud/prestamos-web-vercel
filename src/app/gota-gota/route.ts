@@ -94,6 +94,27 @@ export async function GET(req: NextRequest) {
                   <input type="checkbox" id="cobrar_domingo"> Cobrar también los domingos
                 </label>
               </div>
+
+              <h4 style="margin:20px 0 10px;color:#0b2545;font-size:14px;border-bottom:1px solid #e3dccc;padding-bottom:6px;">Condiciones del préstamo</h4>
+              <div class="form-grid">
+                <div class="field">
+                  <label>
+                    <input type="checkbox" id="cobrar_mora" checked> Cobrar mora por visita fallida
+                  </label>
+                  <p style="font-size:11px;color:#888;margin-top:4px;">Si está activo, se cobran los Bs. de mora cuando el motorizado va y no le pagan.</p>
+                </div>
+                <div class="field">
+                  <label for="tipo_interes_recargo">Interés sobre interés (recargo)</label>
+                  <select id="tipo_interes_recargo">
+                    <option value="ninguno">Ninguno (no recalcular)</option>
+                    <option value="solo_mora">Solo sobre la mora acumulada</option>
+                    <option value="toda_deuda">Sobre toda la deuda (mora + cuotas atrasadas)</option>
+                    <option value="recalcular_cuota">Recalcular la cuota diaria</option>
+                  </select>
+                  <p style="font-size:11px;color:#888;margin-top:4px;">Cómo aplicar el interés cuando el cliente se atrasa.</p>
+                </div>
+              </div>
+
               <div class="field">
                 <label for="contract_number">Número de contrato (opcional)</label>
                 <input type="text" id="contract_number" placeholder="Se genera solo si lo dejas vacío">
@@ -184,6 +205,8 @@ export async function GET(req: NextRequest) {
           motorizado_id: document.getElementById('motorizado_id').value || null,
           fecha_inicio: document.getElementById('fecha_inicio').value,
           cobrar_domingo: document.getElementById('cobrar_domingo').checked,
+          cobrar_mora: document.getElementById('cobrar_mora').checked,
+          tipo_interes_recargo: document.getElementById('tipo_interes_recargo').value,
           contract_number: document.getElementById('contract_number').value.trim(),
         };
         if (!data.client_id) { showAlert('modalAlert', 'Selecciona un cliente'); return; }

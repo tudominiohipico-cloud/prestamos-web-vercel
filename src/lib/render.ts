@@ -12,6 +12,7 @@ const ITEMS = [
   ["motorizados", "🏍", "Motorizados"],
   ["ruta-diaria", "📍", "Ruta Diaria"],
   ["capital", "💰", "Capital"],
+  ["notificaciones", "🔔", "Notificaciones"],
   ["collaterals", "🔒", "Garantías"],
   ["expenses", "💸", "Gastos"],
   ["users", "👤", "Usuarios"],
@@ -19,9 +20,9 @@ const ITEMS = [
 ];
 
 const ROLE_PERMS: Record<string, string[]> = {
-  owner: ["dashboard","gota-gota","clients","loans","payments","motorizados","ruta-diaria","capital","collaterals","expenses","users","audit"],
-  admin: ["dashboard","gota-gota","clients","loans","payments","motorizados","ruta-diaria","capital","collaterals","expenses"],
-  collector: ["dashboard","clients","loans","payments","ruta-diaria"],
+  owner: ["dashboard","gota-gota","clients","loans","payments","motorizados","ruta-diaria","capital","notificaciones","collaterals","expenses","users","audit"],
+  admin: ["dashboard","gota-gota","clients","loans","payments","motorizados","ruta-diaria","capital","notificaciones","collaterals","expenses"],
+  collector: ["dashboard","clients","loans","payments","ruta-diaria","notificaciones"],
 };
 const ROLE_LABEL: Record<string, string> = {
   owner: "Dueño", admin: "Administrador", collector: "Cobrador",
